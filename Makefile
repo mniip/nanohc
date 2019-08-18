@@ -5,9 +5,9 @@ LD= gcc
 LDFLAGS= -fsanitize=undefined
 
 OUTPUT= nanohc
-SOURCES= $(wildcard *.c) $(wildcard rts/*.c)
+SOURCES= $(wildcard *.c) $(wildcard parse/*.c) $(wildcard rts/*.c)
 OBJECTS= $(SOURCES:.c=.o)
-HEADERS= $(wildcard *.h) $(wildcard rts/*.h)
+HEADERS= $(wildcard *.h) $(wildcard parse/*.h) $(wildcard rts/*.h)
 
 all: $(OUTPUT)
 
