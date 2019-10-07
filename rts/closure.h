@@ -3,10 +3,12 @@
 
 #include <stddef.h>
 
-#define CLOSURE_NULL    0x00
-#define CLOSURE_PRIM    0x01
-#define CLOSURE_CONSTR  0x02
-#define CLOSURE_THUNK   0x03
+enum closure_tag {
+	CLOSURE_NULL = 0x00,
+	CLOSURE_PRIM,
+	CLOSURE_CONSTR,
+	CLOSURE_THUNK
+};
 
 typedef unsigned char variant;
 typedef unsigned char gc_data;
@@ -53,13 +55,15 @@ typedef struct closure {
 	} u;
 } closure;
 
-#define ENTRY_PRIM   0x01
-#define ENTRY_REF    0x02
-#define ENTRY_SELECT 0x03
-#define ENTRY_APPLY  0x04
-#define ENTRY_CASE   0x05
-#define ENTRY_LETREC 0x06
-#define ENTRY_LAM    0x07
+enum entry_tag {
+	ENTRY_PRIM = 0x01,
+	ENTRY_REF,
+	ENTRY_SELECT,
+	ENTRY_APPLY,
+	ENTRY_CASE,
+	ENTRY_LETREC,
+	ENTRY_LAM
+};
 
 /* A bitmask specifying a subset of the environment to be passed to the child
  * entry code.

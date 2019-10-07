@@ -9,6 +9,8 @@ void lexer_new(lexer *l, char const *data)
 {
 	l->data = data;
 	l->pos = 0;
+	l->line = 1;
+	l->line_start = 0;
 	l->line_started = 0;
 	l->current_indent = 0;
 	l->indents = NULL;
@@ -23,7 +25,25 @@ void lexer_free(lexer *l)
 		free_array(char, &l->next.u.string.chars, &l->next.u.string.num_chars);
 }
 
-void lexer_unsee(lexer *l, token *t)
+void lexer_copy(lexer *l, lexer const *m)
+{
+	l->data = m->data;
+	l->pos = m->pos;
+	l->line = m->line;
+	l->line_start = m->line_start;
+	l->line_started = m->line_started;
+	l->current_indent = 0;
+	copy_array(size_t,
+		&l->indents, &l->num_indents,
+		&m->indents, &m->num_indents);
+	memcpy(&l->next, &m->next, sizeof l->next);
+	if(m->next.type == TK_STRING)
+		copy_array(char,
+			&l->next.u.string.chars, &l->next.u.string.num_chars,
+			&m->next.u.string.chars, &m->next.u.string.num_chars);
+}
+
+void lexer_unsee(lexer *l, token const *t)
 {
 	ASSERT(l->next.type == TK_EOF);
 	memcpy(&l->next, t, sizeof l->next);
@@ -112,6 +132,12 @@ void lexer_next(lexer *l, token *t)
 {
 	/* Skip whitespace */
 	int skipping = 1;
+	if(l->next.type != TK_EOF)
+	{
+		memcpy(t, &l->next, sizeof *t);
+		l->next.type = TK_EOF;
+		return;
+	}
 	while(skipping) {
 		switch(l->data[l->pos]) {
 		case '\r':
@@ -204,6 +230,14 @@ void lexer_next(lexer *l, token *t)
 		return;
 	case ';':
 		set_token(l, t, TK_SEMICOLON);
+		++l->pos;
+		return;
+	case '(':
+		set_token(l, t, TK_OPENPAREN);
+		++l->pos;
+		return;
+	case ')':
+		set_token(l, t, TK_CLOSEPAREN);
 		++l->pos;
 		return;
 	case ',':
@@ -329,14 +363,14 @@ void lexer_next(lexer *l, token *t)
 			set_token(l, t, TK_SYMBOL);
 			t->u.name.qualifier =
 				intern_sz(&l->data[l->pos], name_offt - l->pos - 1);
-			t->u.name.name = intern_sz(&l->data[l->pos], offt - name_offt);
+			t->u.name.name = intern_sz(&l->data[name_offt], offt - name_offt);
 			l->pos = offt;
 			return;
 		}
 		set_token(l, t, TK_NAME);
-		t->u.name.qualifier = name_offt == offt ? NULL :
+		t->u.name.qualifier = name_offt == l->pos ? NULL :
 			intern_sz(&l->data[l->pos], name_offt - l->pos - 1);
-		t->u.name.name = intern_sz(&l->data[l->pos], offt - name_offt);
+		t->u.name.name = intern_sz(&l->data[name_offt], offt - name_offt);
 		l->pos = offt;
 		return;
 	} else if(is_number(l->data[l->pos])) {

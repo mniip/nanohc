@@ -79,3 +79,77 @@ void remove_array_sz(size_t sz, void **array, size_t *len, int at)
 		(*len - at - 1) * sz);
 	shrink_array_sz(sz, array, len);
 }
+
+extern void copy_array_sz(size_t sz, void **dest, size_t *destlen, void *const *src, size_t const *srclen)
+{
+	*destlen = *srclen;
+	*dest = do_alloc(*destlen * sz);
+	if(*destlen)
+		memcpy(*dest, *src, *destlen * sz);
+}
+
+tree *new_tree(int tag, size_t num_children)
+{
+	tree *t = allocate(tree);
+	t->tag = tag;
+	t->children = allocate_arr(tree *, num_children);
+	t->num_children = num_children;
+	t->data = NULL;
+	return t;
+}
+
+tree *new_tree_0_d(int tag, void *data)
+{
+	tree *t = new_tree(tag, 0);
+	t->data = data;
+	return t;
+}
+
+tree *new_tree_0(int tag)
+{
+	tree *t = new_tree(tag, 0);
+	return t;
+}
+
+tree *new_tree_1(int tag, tree *child0)
+{
+	tree *t = new_tree(tag, 1);
+	t->children[0] = child0;
+	return t;
+}
+
+tree *new_tree_1_d(int tag, tree *child0, void *data)
+{
+	tree *t = new_tree(tag, 1);
+	t->children[0] = child0;
+	t->data = data;
+	return t;
+}
+
+tree *new_tree_2(int tag, tree *child0, tree *child1)
+{
+	tree *t = new_tree(tag, 2);
+	t->children[0] = child0;
+	t->children[1] = child1;
+	return t;
+}
+
+tree *new_tree_3(int tag, tree *child0, tree *child1, tree *child2)
+{
+	tree *t = new_tree(tag, 3);
+	t->children[0] = child0;
+	t->children[1] = child1;
+	t->children[2] = child2;
+	return t;
+}
+
+void free_tree(tree *t)
+{
+	size_t i;
+	for(i = 0; i < t->num_children; i++)
+		if(t->children[i])
+			free_tree(t->children[i]);
+	unallocate(t->children);
+	if(t->data)
+		unallocate(t->data);
+}
