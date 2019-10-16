@@ -53,6 +53,10 @@ enum token_type {
 	TK_OPENPAREN,
 	/* ) */
 	TK_CLOSEPAREN,
+	/* [ */
+	TK_OPENBRACKET,
+	/* ] */
+	TK_CLOSEBRACKET,
 	/* , */
 	TK_COMMA,
 	/* .. */
@@ -73,6 +77,8 @@ enum token_type {
 	TK_AT,
 	/* => */
 	TK_CONTEXT,
+	/* ` */
+	TK_BACKTICK,
 	/* End of file or invalid token */
 	TK_EOF = 0xFF
 };
@@ -92,6 +98,8 @@ typedef struct token {
 	size_t line;
 	/* Offset from the beginning of the line */
 	size_t col;
+	/* Indentation of token */
+	size_t indent;
 	union {
 		/* TK_SYMBOL or TK_NAME */
 		qualname name;
@@ -113,8 +121,9 @@ typedef struct lexer {
 	size_t line_start;
 	/* Have we seen any non-whitespace chars on this line */
 	int line_started;
-	/* Indentation on the current line */
-	size_t current_indent;
+	/* Difference between the current indentation and the current position in
+	 * the line */
+	size_t indent_adj;
 	/* Current layout state: a list of indent depths */
 	size_t *indents;
 	size_t num_indents;
@@ -132,14 +141,17 @@ extern void lexer_copy(lexer *, lexer const *);
 extern void lexer_next(lexer *, token *);
 
 /* Return a token (presumably one that was just lexed) so that it is returned on
- * the next "lexer_next" invocation. Not possible after a "lexer_next_brace". */
+ * the next "lexer_next" invocation. Not possible after "lexer_next_open" has
+ * returned a virtual opening brace. */
 extern void lexer_unsee(lexer *, token const *);
 
-/* Expect a brace next, if there isn't one generate a virtual opening brace and
- * push the current indentation into the layout state. */
-extern void lexer_next_brace(lexer *, token *);
+/* Expect an opening brace next, if there isn't one generate a virtual opening
+ * brace and push the current indentation into the layout state. Returns whether
+ * the brace was virtual. */
+extern int lexer_next_open(lexer *, token *);
 
-/* Pop an indentation from the layout state. */
-extern void lexer_outdent(lexer *);
+/* If the "virt" parameter is true then return a virtual brace and pop the
+ * current indentation from the layout state. Otherwise return the next token */
+extern void lexer_next_close(lexer *, token *, int virt);
 
 #endif

@@ -29,6 +29,7 @@ char const *intern_sz(char const *str, size_t sz)
 				return (char *)ptr->ptr;
 	newstr = allocate_arr(char, sz + 1);
 	strncpy(newstr, str, sz);
+	newstr[sz] = 0;
 	prepend_list(&interned_strings, newstr);
 	return interned_strings->ptr;
 }
@@ -145,11 +146,13 @@ tree *new_tree_3(int tag, tree *child0, tree *child1, tree *child2)
 
 void free_tree(tree *t)
 {
-	size_t i;
-	for(i = 0; i < t->num_children; i++)
-		if(t->children[i])
+	if(t)
+	{
+		size_t i;
+		for(i = 0; i < t->num_children; i++)
 			free_tree(t->children[i]);
-	unallocate(t->children);
-	if(t->data)
+		unallocate(t->children);
 		unallocate(t->data);
+		unallocate(t);
+	}
 }

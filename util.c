@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <signal.h>
 
 void panic(char const *fmt, ...)
 {
@@ -22,4 +23,14 @@ void panic_errno(char const *fmt, ...)
 	va_end(arg);
 	fprintf(stderr, ": %s\n", strerror(errno));
 	exit(EXIT_FAILURE);
+}
+
+void panic_fail(char const *fmt, ...)
+{
+	va_list arg;
+	va_start(arg, fmt);
+	vfprintf(stderr, fmt, arg);
+	va_end(arg);
+	fprintf(stderr, "\n");
+	raise(SIGABRT);
 }
